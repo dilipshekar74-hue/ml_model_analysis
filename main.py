@@ -2,6 +2,8 @@ import pandas as pd
 import streamlit as st
 import pickle
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, GradientBoostingClassifier
@@ -208,6 +210,87 @@ if df is not None and not df.empty:
     st.success("Dataset loaded successfully. You can proceed to train the selected model.")
 else:
     st.info("Upload a CSV file to begin analysis.")
+
+
+def detect_outliers(series):
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    outliers = series[(series < lower_bound) | (series > upper_bound)]
+    return q1, q3, iqr, lower_bound, upper_bound, outliers
+
+
+if df is not None and not df.empty:
+    numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+    if numeric_columns:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.subheader("Outlier Visualization")
+
+        outlier_col = st.selectbox("Select a numeric column", numeric_columns, key="outlier_col")
+        chart_type = st.radio(
+            "Choose graph type",
+            ["Box Plot", "Histogram", "Scatter Plot"],
+            horizontal=True,
+            key="outlier_chart_type",
+        )
+
+        values = df[outlier_col].dropna()
+        q1, q3, iqr, lower_bound, upper_bound, outliers = detect_outliers(values)
+
+        if chart_type == "Box Plot":
+            fig, ax = plt.subplots(figsize=(9, 4.5))
+            ax.boxplot(
+                values,
+                patch_artist=True,
+                boxprops=dict(facecolor="#60a5fa", alpha=0.8),
+                medianprops=dict(color="#facc15", linewidth=2),
+                whiskerprops=dict(color="#cbd5e1"),
+                capprops=dict(color="#cbd5e1"),
+                flierprops=dict(marker='o', markerfacecolor="#f87171", markeredgecolor="#f87171", markersize=7),
+            )
+            ax.set_title(f"{outlier_col} - Box Plot")
+            ax.set_ylabel(outlier_col)
+            plt.tight_layout()
+            st.pyplot(fig)
+
+        elif chart_type == "Histogram":
+            fig, ax = plt.subplots(figsize=(9, 4.5))
+            bins = min(20, max(5, len(values) // 5))
+            ax.hist(values, bins=bins, color="#7dd3fc", edgecolor="white", alpha=0.9)
+            ax.axvline(lower_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Lower: {lower_bound:.2f}")
+            ax.axvline(upper_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Upper: {upper_bound:.2f}")
+            ax.axvline(values.median(), color="#facc15", linestyle="-", linewidth=2, label=f"Median: {values.median():.2f}")
+            ax.set_title(f"{outlier_col} - Histogram with IQR Boundaries")
+            ax.set_xlabel(outlier_col)
+            ax.set_ylabel("Frequency")
+            ax.legend()
+            plt.tight_layout()
+            st.pyplot(fig)
+
+        else:
+            fig, ax = plt.subplots(figsize=(9, 4.5))
+            x = np.arange(len(values))
+            colors = np.where((values < lower_bound) | (values > upper_bound), "#f87171", "#60a5fa")
+            ax.scatter(x, values, c=colors, s=35, alpha=0.8)
+            ax.axhline(lower_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Lower: {lower_bound:.2f}")
+            ax.axhline(upper_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Upper: {upper_bound:.2f}")
+            ax.axhline(values.median(), color="#facc15", linestyle="-", linewidth=2, label=f"Median: {values.median():.2f}")
+            ax.set_title(f"{outlier_col} - Value Scatter")
+            ax.set_xlabel("Observation index")
+            ax.set_ylabel(outlier_col)
+            ax.legend()
+            plt.tight_layout()
+            st.pyplot(fig)
+
+        if outliers.empty:
+            st.success(f"No outliers detected in {outlier_col} using the IQR rule.")
+        else:
+            st.warning(f"Detected {len(outliers)} outliers in {outlier_col} outside [{lower_bound:.2f}, {upper_bound:.2f}].")
+            st.write(outliers.head(10))
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 def build_model(model_type, df, target_column):
