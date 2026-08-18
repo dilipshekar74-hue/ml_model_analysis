@@ -51,6 +51,46 @@ def clean_data(file):
     return df
 
 
+def build_demo_row(df, target_column):
+    if df is None or df.empty:
+        return pd.DataFrame()
+
+    demo_row = {}
+    for col in df.columns:
+        if col == target_column:
+            continue
+
+        values = df[col].dropna()
+        if values.empty:
+            demo_row[col] = 0
+        elif pd.api.types.is_numeric_dtype(values):
+            demo_row[col] = float(values.median())
+        else:
+            mode_value = values.mode()
+            demo_row[col] = mode_value.iloc[0] if not mode_value.empty else "unknown"
+
+    return pd.DataFrame([demo_row])
+
+
+def predict_demo_sample(model_result):
+    if model_result is None or "model" not in model_result:
+        return None
+
+    demo_df = build_demo_row(model_result["source_df"], model_result["target_column"])
+    if demo_df.empty:
+        return None
+
+    demo_features = pd.get_dummies(demo_df, drop_first=True)
+    demo_features = demo_features.reindex(columns=model_result["feature_columns"], fill_value=0)
+    prediction = model_result["model"].predict(demo_features)
+    prediction_value = prediction[0]
+
+    if model_result.get("target_classes") is not None:
+        return model_result["target_classes"][int(prediction_value)]
+
+    return prediction_value
+
+
 df = clean_data(file)
 
 st.write("The dataset has been analyzed. You can now proceed to build ML models.")
@@ -81,11 +121,11 @@ def build_model(model_type, df, target_column):
     X = df_model.drop(target_column, axis=1)
     y = df_model[target_column]
 
-    # Convert categorical features into numeric values for sklearn models.
     X = pd.get_dummies(X, drop_first=True)
+    target_classes = None
 
     if not pd.api.types.is_numeric_dtype(y):
-        y = pd.factorize(y)[0]
+        y, target_classes = pd.factorize(y)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -100,6 +140,9 @@ def build_model(model_type, df, target_column):
             "r2": r2_score(y_test, y_pred),
             "mae": mean_absolute_error(y_test, y_pred),
             "mape": (mean_absolute_error(y_test, y_pred) / y_test.mean()) * 100,
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
         }
     elif model_type == "Random Forest Regressor":
         model = RandomForestRegressor()
@@ -112,6 +155,9 @@ def build_model(model_type, df, target_column):
             "r2": r2_score(y_test, y_pred),
             "mae": mean_absolute_error(y_test, y_pred),
             "mape": (mean_absolute_error(y_test, y_pred) / y_test.mean()) * 100,
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
         }
     elif model_type == "Gradient Boosting Regressor":
         model = GradientBoostingRegressor()
@@ -124,6 +170,9 @@ def build_model(model_type, df, target_column):
             "r2": r2_score(y_test, y_pred),
             "mae": mean_absolute_error(y_test, y_pred),
             "mape": (mean_absolute_error(y_test, y_pred) / y_test.mean()) * 100,
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
         }
     elif model_type == "Logistic Regression":
         model = LogisticRegression(max_iter=1000)
@@ -135,6 +184,10 @@ def build_model(model_type, df, target_column):
             "precision": precision_score(y_test, y_pred, average='weighted'),
             "recall": recall_score(y_test, y_pred, average='weighted'),
             "f1": f1_score(y_test, y_pred, average='weighted'),
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
+            "target_classes": list(target_classes) if target_classes is not None else None,
         }
     elif model_type == "Random Forest Classifier":
         model = RandomForestClassifier()
@@ -146,6 +199,10 @@ def build_model(model_type, df, target_column):
             "precision": precision_score(y_test, y_pred, average='weighted'),
             "recall": recall_score(y_test, y_pred, average='weighted'),
             "f1": f1_score(y_test, y_pred, average='weighted'),
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
+            "target_classes": list(target_classes) if target_classes is not None else None,
         }
     elif model_type == "Gradient Boosting Classifier":
         model = GradientBoostingClassifier()
@@ -157,6 +214,10 @@ def build_model(model_type, df, target_column):
             "precision": precision_score(y_test, y_pred, average='weighted'),
             "recall": recall_score(y_test, y_pred, average='weighted'),
             "f1": f1_score(y_test, y_pred, average='weighted'),
+            "feature_columns": X.columns.tolist(),
+            "target_column": target_column,
+            "source_df": df_model,
+            "target_classes": list(target_classes) if target_classes is not None else None,
         }
 
     return None
@@ -166,8 +227,23 @@ if st.button("Build Model"):
     result = build_model(model_type, df, target_column)
     if result is not None:
         st.session_state["trained_model"] = result["model"]
-        st.session_state["metrics"] = {key: value for key, value in result.items() if key != "model"}
+        st.session_state["metrics"] = {key: value for key, value in result.items() if key not in {"model", "feature_columns", "target_column", "source_df", "target_classes"}}
+        st.session_state["demo_row"] = build_demo_row(result["source_df"], result["target_column"])
+        st.session_state["demo_prediction"] = predict_demo_sample(result)
+        st.session_state["demo_model_info"] = {
+            "model_type": model_type,
+            "problem_type": problem_type,
+            "target_column": target_column,
+        }
         st.write(st.session_state["metrics"])
+
+        if st.session_state["demo_row"].empty is False and st.session_state["demo_prediction"] is not None:
+            st.subheader("Demo Prediction")
+            st.dataframe(st.session_state["demo_row"], use_container_width=True)
+            if isinstance(st.session_state["demo_prediction"], (int, float)):
+                st.metric("Predicted value", round(float(st.session_state["demo_prediction"]), 4))
+            else:
+                st.write(f"Predicted class: {st.session_state['demo_prediction']}")
 
 st.write("You can now download the model or make predictions on new data.")
 st.write("To download the model, click the button below.")
