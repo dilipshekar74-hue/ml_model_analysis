@@ -15,8 +15,90 @@ from sklearn.metrics import (
     f1_score,
 )
 
-st.title("ML Model Analysis")
-st.write("Upload a CSV file to analyze the dataset and build ML models.")
+st.set_page_config(page_title="ML Model Analysis", page_icon="🤖", layout="wide")
+
+st.markdown(
+    """
+    <style>
+        .stApp {
+            background: linear-gradient(135deg, #0f172a 0%, #111827 30%, #1e293b 100%);
+            color: #e2e8f0;
+        }
+        .main .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        div[data-testid="stFileUploader"] > section {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 18px;
+            padding: 0.5rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+        }
+        .block-container h1 {
+            color: #f8fafc;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+        .hero-box {
+            background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(168,85,247,0.16));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 22px;
+            padding: 1.4rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+            margin-bottom: 1.2rem;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 1rem 1.1rem;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+        }
+        .metric-label {
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #cbd5e1;
+        }
+        .stButton > button {
+            width: 100%;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            font-weight: 700;
+            padding: 0.7rem 1rem;
+        }
+        .stDownloadButton > button {
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            font-weight: 600;
+        }
+        .stDataFrame {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="hero-box">
+        <h1>ML Model Analysis</h1>
+        <p style="color:#cbd5e1; margin:0; font-size:1.05rem;">
+            Upload a dataset, train a machine learning model, and preview a demo prediction.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 file = st.file_uploader("Choose a CSV file", type="csv", key="file_uploader")
 
 
@@ -93,19 +175,39 @@ def predict_demo_sample(model_result):
 
 df = clean_data(file)
 
-st.write("The dataset has been analyzed. You can now proceed to build ML models.")
-st.write("Choose the type of problem(Regression or Classification):")
-problem_type = st.selectbox("Select a problem type", ["Regression", "Classification"], key="problem_type_selector")
-if problem_type == "Regression":
-    st.write("You have selected Regression. You can now choose a model to build.")
-    model_type = st.radio("Select a model", options=["Linear Regression", "Random Forest Regressor", "Gradient Boosting Regressor"], key="model_selector")
-else:
-    st.write("You have selected Classification. You can now choose a model to build.")
-    model_type = st.radio("Select a model", options=["Logistic Regression", "Random Forest Classifier", "Gradient Boosting Classifier"], key="model_selector")
+with st.container():
+    col_left, col_right = st.columns([1.6, 1])
 
-target_column = None
+    with col_left:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.write("Choose the type of problem and model you want to evaluate.")
+        problem_type = st.selectbox("Select a problem type", ["Regression", "Classification"], key="problem_type_selector")
+        if problem_type == "Regression":
+            st.write("Regression mode is active.")
+            model_type = st.radio("Select a model", options=["Linear Regression", "Random Forest Regressor", "Gradient Boosting Regressor"], key="model_selector")
+        else:
+            st.write("Classification mode is active.")
+            model_type = st.radio("Select a model", options=["Logistic Regression", "Random Forest Classifier", "Gradient Boosting Classifier"], key="model_selector")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_right:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        if df is not None and not df.empty:
+            target_column = st.selectbox("Select target column", options=list(df.columns), key="target_column_selector")
+            st.caption(f"Rows: {len(df)} | Columns: {len(df.columns)}")
+            if target_column:
+                st.caption(f"Target selected: {target_column}")
+        else:
+            target_column = None
+            st.caption("Upload a valid CSV to unlock target selection.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
 if df is not None and not df.empty:
-    target_column = st.selectbox("Select target column", options=list(df.columns), key="target_column_selector")
+    st.success("Dataset loaded successfully. You can proceed to train the selected model.")
+else:
+    st.info("Upload a CSV file to begin analysis.")
 
 
 def build_model(model_type, df, target_column):
@@ -223,31 +325,50 @@ def build_model(model_type, df, target_column):
     return None
 
 
-if st.button("Build Model"):
-    result = build_model(model_type, df, target_column)
-    if result is not None:
-        st.session_state["trained_model"] = result["model"]
-        st.session_state["metrics"] = {key: value for key, value in result.items() if key not in {"model", "feature_columns", "target_column", "source_df", "target_classes"}}
-        st.session_state["demo_row"] = build_demo_row(result["source_df"], result["target_column"])
-        st.session_state["demo_prediction"] = predict_demo_sample(result)
-        st.session_state["demo_model_info"] = {
-            "model_type": model_type,
-            "problem_type": problem_type,
-            "target_column": target_column,
-        }
-        st.write(st.session_state["metrics"])
+st.markdown("<br>", unsafe_allow_html=True)
 
-        if st.session_state["demo_row"].empty is False and st.session_state["demo_prediction"] is not None:
-            st.subheader("Demo Prediction")
-            st.dataframe(st.session_state["demo_row"], use_container_width=True)
-            if isinstance(st.session_state["demo_prediction"], (int, float)):
-                st.metric("Predicted value", round(float(st.session_state["demo_prediction"]), 4))
-            else:
-                st.write(f"Predicted class: {st.session_state['demo_prediction']}")
+build_col, info_col = st.columns([1.3, 0.7])
+with build_col:
+    if st.button("Build Model", use_container_width=True):
+        result = build_model(model_type, df, target_column)
+        if result is not None:
+            st.session_state["trained_model"] = result["model"]
+            st.session_state["metrics"] = {key: value for key, value in result.items() if key not in {"model", "feature_columns", "target_column", "source_df", "target_classes"}}
+            st.session_state["demo_row"] = build_demo_row(result["source_df"], result["target_column"])
+            st.session_state["demo_prediction"] = predict_demo_sample(result)
+            st.session_state["demo_model_info"] = {
+                "model_type": model_type,
+                "problem_type": problem_type,
+                "target_column": target_column,
+            }
 
-st.write("You can now download the model or make predictions on new data.")
-st.write("To download the model, click the button below.")
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            st.subheader("Model Metrics")
+            st.write(st.session_state["metrics"])
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            if st.session_state["demo_row"].empty is False and st.session_state["demo_prediction"] is not None:
+                st.markdown('<div class="glass-card" style="margin-top:1rem;">', unsafe_allow_html=True)
+                st.subheader("Demo Prediction")
+                st.dataframe(st.session_state["demo_row"], use_container_width=True)
+                if isinstance(st.session_state["demo_prediction"], (int, float)):
+                    st.metric("Predicted value", round(float(st.session_state["demo_prediction"]), 4))
+                else:
+                    st.write(f"Predicted class: {st.session_state['demo_prediction']}")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+with info_col:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.subheader("Status")
+    st.write("Ready to train the selected model.")
+    st.write("After training, a demo prediction will be shown here.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
 if "trained_model" in st.session_state:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("You can now download the model or make predictions on new data.")
     model_bytes = pickle.dumps(st.session_state["trained_model"])
     st.download_button(
         "Download Model",
@@ -255,3 +376,4 @@ if "trained_model" in st.session_state:
         file_name="model.pkl",
         mime="application/octet-stream",
     )
+    st.markdown('</div>', unsafe_allow_html=True)
