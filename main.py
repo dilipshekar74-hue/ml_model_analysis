@@ -176,9 +176,13 @@ def predict_demo_sample(model_result):
 
 
 df = clean_data(file)
+st.session_state["original_df"] = df.copy() if df is not None else None
+st.session_state["working_df"] = df.copy() if df is not None else None
 
 with st.container():
     col_left, col_right = st.columns([1.6, 1])
+
+    current_df = st.session_state.get("working_df", df)
 
     with col_left:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -194,9 +198,9 @@ with st.container():
 
     with col_right:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        if df is not None and not df.empty:
-            target_column = st.selectbox("Select target column", options=list(df.columns), key="target_column_selector")
-            st.caption(f"Rows: {len(df)} | Columns: {len(df.columns)}")
+        if current_df is not None and not current_df.empty:
+            target_column = st.selectbox("Select target column", options=list(current_df.columns), key="target_column_selector")
+            st.caption(f"Rows: {len(current_df)} | Columns: {len(current_df.columns)}")
             if target_column:
                 st.caption(f"Target selected: {target_column}")
         else:
@@ -222,6 +226,10 @@ def detect_outliers(series):
     return q1, q3, iqr, lower_bound, upper_bound, outliers
 
 
+if "working_df" not in st.session_state:
+    st.session_state["working_df"] = df
+
+
 if df is not None and not df.empty:
     numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
     if numeric_columns:
@@ -231,7 +239,7 @@ if df is not None and not df.empty:
         outlier_col = st.selectbox("Select a numeric column", numeric_columns, key="outlier_col")
         chart_type = st.radio(
             "Choose graph type",
-            ["Box Plot", "Histogram", "Scatter Plot"],
+            ["Box Plot", "Histogram", "Scatter Plot", "Violin Plot"],
             horizontal=True,
             key="outlier_chart_type",
         )
@@ -269,7 +277,7 @@ if df is not None and not df.empty:
             plt.tight_layout()
             st.pyplot(fig)
 
-        else:
+        elif chart_type == "Scatter Plot":
             fig, ax = plt.subplots(figsize=(9, 4.5))
             x = np.arange(len(values))
             colors = np.where((values < lower_bound) | (values > upper_bound), "#f87171", "#60a5fa")
@@ -284,11 +292,55 @@ if df is not None and not df.empty:
             plt.tight_layout()
             st.pyplot(fig)
 
+        else:
+            fig, ax = plt.subplots(figsize=(9, 4.5))
+            parts = ax.violinplot(values, positions=[1], widths=0.7, showmeans=True)
+            for body in parts['bodies']:
+                body.set_facecolor('#60a5fa')
+                body.set_alpha(0.8)
+                body.set_edgecolor('#1d4ed8')
+            ax.set_title(f"{outlier_col} - Violin Plot")
+            ax.set_xticks([1])
+            ax.set_xticklabels([outlier_col])
+            ax.set_ylabel(outlier_col)
+            plt.tight_layout()
+            st.pyplot(fig)
+
+        if st.checkbox("Compare original and cleaned distribution", key="compare_cleaned_distribution"):
+            cleaned_values = values[(values >= lower_bound) & (values <= upper_bound)]
+            fig, ax = plt.subplots(figsize=(9, 4.5))
+            ax.hist(values, bins=min(20, max(5, len(values) // 5)), alpha=0.6, color="#60a5fa", label="Original")
+            ax.hist(cleaned_values, bins=min(20, max(5, len(cleaned_values) // 5)), alpha=0.6, color="#34d399", label="Without outliers")
+            ax.axvline(lower_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Lower: {lower_bound:.2f}")
+            ax.axvline(upper_bound, color="#f87171", linestyle="--", linewidth=2, label=f"Upper: {upper_bound:.2f}")
+            ax.set_title(f"{outlier_col} - Original vs Cleaned Distribution")
+            ax.set_xlabel(outlier_col)
+            ax.set_ylabel("Frequency")
+            ax.legend()
+            plt.tight_layout()
+            st.pyplot(fig)
+
         if outliers.empty:
             st.success(f"No outliers detected in {outlier_col} using the IQR rule.")
+            if st.button("Reset to original dataset", key="reset_outliers_button"):
+                st.session_state["working_df"] = st.session_state.get("original_df", df).copy()
+                st.rerun()
         else:
             st.warning(f"Detected {len(outliers)} outliers in {outlier_col} outside [{lower_bound:.2f}, {upper_bound:.2f}].")
             st.write(outliers.head(10))
+
+            remove_col, reset_col = st.columns(2)
+            with remove_col:
+                if st.button("Remove outliers from dataset", key="remove_outliers_button"):
+                    original_df = st.session_state.get("original_df", df)
+                    cleaned_df = original_df[(original_df[outlier_col] >= lower_bound) & (original_df[outlier_col] <= upper_bound)].copy()
+                    st.session_state["working_df"] = cleaned_df
+                    st.success(f"Outliers removed from {outlier_col}. The cleaned dataset is now ready for model training.")
+                    st.write(f"Rows before: {len(original_df)} | Rows after: {len(cleaned_df)}")
+            with reset_col:
+                if st.button("Reset to original dataset", key="reset_after_remove_button"):
+                    st.session_state["working_df"] = st.session_state.get("original_df", df).copy()
+                    st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -413,7 +465,10 @@ st.markdown("<br>", unsafe_allow_html=True)
 build_col, info_col = st.columns([1.3, 0.7])
 with build_col:
     if st.button("Build Model", use_container_width=True):
-        result = build_model(model_type, df, target_column)
+        training_df = st.session_state.get("working_df", df)
+        if training_df is None:
+            training_df = df
+        result = build_model(model_type, training_df, target_column)
         if result is not None:
             st.session_state["trained_model"] = result["model"]
             st.session_state["metrics"] = {key: value for key, value in result.items() if key not in {"model", "feature_columns", "target_column", "source_df", "target_classes"}}
