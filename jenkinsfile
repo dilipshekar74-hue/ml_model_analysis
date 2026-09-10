@@ -50,7 +50,7 @@ pipeline {
 
                 start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
 
-                timeout /t 5 /nobreak >nul
+                exit /b 0
                 '''
             }
         }
@@ -58,7 +58,7 @@ pipeline {
         stage('Verify Application') {
             steps {
                 bat '''
-                powershell -NoProfile -Command "try { Invoke-WebRequest -Uri http://localhost:8501 -UseBasicParsing -TimeoutSec 10 | Out-Null; Write-Host 'Streamlit application is running successfully.' } catch { Write-Error 'Streamlit application failed to start.'; exit 1 }"
+                powershell -NoProfile -Command "$ok=$false; for($i=0;$i -lt 12;$i++){ try { $r=Invoke-WebRequest -Uri 'http://localhost:8501' -UseBasicParsing -TimeoutSec 3; if($r.StatusCode -eq 200){$ok=$true; break} } catch {} ; Start-Sleep -Seconds 2 }; if($ok){Write-Host 'Streamlit application is running successfully.'} else {Write-Host 'Streamlit failed to start.'; if(Test-Path 'C:\\xampp\\htdocs\\ml_model\\streamlit.log'){Get-Content 'C:\\xampp\\htdocs\\ml_model\\streamlit.log'}; exit 1}"
                 '''
             }
         }
