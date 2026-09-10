@@ -13,8 +13,10 @@ pipeline {
             steps {
                 bat 'where python'
                 bat 'where pip'
+
                 bat 'C:\\Python314\\python.exe --version'
                 bat 'C:\\Python314\\python.exe -m pip --version'
+
                 bat 'C:\\Python314\\python.exe -m pip install -r requirements.txt'
             }
         }
@@ -27,15 +29,20 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                bat 'if not exist C:\\xampp\\htdocs\\ml_model mkdir C:\\xampp\\htdocs\\ml_model'
-                bat 'xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model'
+                bat '''
+                if not exist C:\\xampp\\htdocs\\ml_model mkdir C:\\xampp\\htdocs\\ml_model
+
+                xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model
+                '''
             }
         }
 
         stage('Stop Old Streamlit') {
             steps {
                 bat '''
-                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8501 ^| findstr LISTENING') do taskkill /PID %%a /F
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8501 ^| findstr LISTENING') do taskkill /PID %%a /F >nul 2>&1
+
+                exit /b 0
                 '''
             }
         }
