@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Build') {
+            steps {
+                echo 'Building ML Model Analysis application...'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                bat 'python --version'
+                bat 'pip --version'
+                bat 'python -m pip install -r requirements.txt'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'python -m py_compile main.py'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                bat 'if not exist C:\\xampp\\htdocs\\ml_model mkdir C:\\xampp\\htdocs\\ml_model'
+                bat 'xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model'
+            }
+        }
+
+    }
+}
