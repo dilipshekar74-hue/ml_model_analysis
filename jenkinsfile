@@ -44,16 +44,16 @@ pipeline {
         }
 
         stage('Start Streamlit') {
-            steps {
-                bat '''
-                if exist C:\\xampp\\htdocs\\ml_model\\streamlit.log del C:\\xampp\\htdocs\\ml_model\\streamlit.log
+    steps {
+        bat '''
+        if exist C:\\xampp\\htdocs\\ml_model\\streamlit.log del C:\\xampp\\htdocs\\ml_model\\streamlit.log
 
-                start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
+        powershell -NoProfile -Command "Start-Process -FilePath 'C:\\Python314\\python.exe' -ArgumentList '-m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 --server.port 8501' -WorkingDirectory 'C:\\xampp\\htdocs\\ml_model' -WindowStyle Hidden -RedirectStandardOutput 'C:\\xampp\\htdocs\\ml_model\\streamlit.log' -RedirectStandardError 'C:\\xampp\\htdocs\\ml_model\\streamlit.log'"
 
-                exit /b 0
-                '''
-            }
-        }
+        exit /b 0
+        '''
+    }
+}
 
         stage('Verify Application') {
             steps {
