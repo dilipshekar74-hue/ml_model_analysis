@@ -34,7 +34,7 @@ pipeline {
 stage('Start Streamlit') {
     steps {
         bat '''
-        start "ML Model Analysis" /B C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true
+        start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
         '''
     }
 }
