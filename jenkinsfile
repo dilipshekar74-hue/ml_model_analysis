@@ -1,70 +1,164 @@
-pipeline {
-    agent any
+Started by user Dilip Shekar K
+Obtained jenkinsfile from git https://github.com/dilipshekar74-hue/ml_model_analysis.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\ml-model
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git.exe rev-parse --resolve-git-dir C:\ProgramData\Jenkins\.jenkins\workspace\ml-model\.git # timeout=10
+Fetching changes from the remote Git repository
+ > git.exe config remote.origin.url https://github.com/dilipshekar74-hue/ml_model_analysis.git # timeout=10
+Fetching upstream changes from https://github.com/dilipshekar74-hue/ml_model_analysis.git
+ > git.exe --version # timeout=10
+ > git --version # 'git version 2.55.0.windows.5'
+ > git.exe fetch --tags --force --progress -- https://github.com/dilipshekar74-hue/ml_model_analysis.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git.exe rev-parse "refs/remotes/origin/main^{commit}" # timeout=10
+Checking out Revision 9506f6f33b93b0924770eb83d1ee6d255fe92bc4 (refs/remotes/origin/main)
+ > git.exe config core.sparsecheckout # timeout=10
+ > git.exe checkout -f 9506f6f33b93b0924770eb83d1ee6d255fe92bc4 # timeout=10
+Commit message: "Refactor Jenkinsfile for improved readability and structure"
+ > git.exe rev-list --no-walk d86883d1ee5187eedb2634f46a4e42556d7de418 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Build)
+[Pipeline] echo
+Building ML Model Analysis application...
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install Dependencies)
+[Pipeline] bat
 
-    stages {
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>where python 
+C:\msys64\ucrt64\bin\python.exe
+C:\Python314\python.exe
+[Pipeline] bat
 
-        stage('Build') {
-            steps {
-                echo 'Building ML Model Analysis application...'
-            }
-        }
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>where pip 
+C:\Python314\Scripts\pip.exe
+[Pipeline] bat
 
-        stage('Install Dependencies') {
-            steps {
-                bat 'where python'
-                bat 'where pip'
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>C:\Python314\python.exe --version 
+Python 3.14.7
+[Pipeline] bat
 
-                bat 'C:\\Python314\\python.exe --version'
-                bat 'C:\\Python314\\python.exe -m pip --version'
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>C:\Python314\python.exe -m pip --version 
+pip 26.2.1 from C:\Python314\Lib\site-packages\pip (python 3.14)
 
-                bat 'C:\\Python314\\python.exe -m pip install -r requirements.txt'
-            }
-        }
+[Pipeline] bat
 
-        stage('Test') {
-            steps {
-                bat 'C:\\Python314\\python.exe -m py_compile main.py'
-            }
-        }
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>C:\Python314\python.exe -m pip install -r requirements.txt 
+Requirement already satisfied: streamlit in C:\Python314\Lib\site-packages (from -r requirements.txt (line 1)) (1.63.0)
+Requirement already satisfied: pandas in C:\Python314\Lib\site-packages (from -r requirements.txt (line 2)) (3.0.5)
+Requirement already satisfied: numpy in C:\Python314\Lib\site-packages (from -r requirements.txt (line 3)) (2.5.3)
+Requirement already satisfied: scikit-learn in C:\Python314\Lib\site-packages (from -r requirements.txt (line 4)) (1.9.0)
+Requirement already satisfied: matplotlib in C:\Python314\Lib\site-packages (from -r requirements.txt (line 5)) (3.11.1)
+Requirement already satisfied: altair!=5.4.0,!=5.4.1,<7,>=5.0.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (6.2.2)
+Requirement already satisfied: click<9,>=7.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (8.5.0)
+Requirement already satisfied: packaging>=20 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (26.3)
+Requirement already satisfied: pillow<13,>=7.1.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (12.3.0)
+Requirement already satisfied: pydeck<1,>=0.8.0b4 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (0.9.3)
+Requirement already satisfied: protobuf<8,>=5.26.1 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (7.36.1)
+Requirement already satisfied: pyarrow!=25.0.0,<26,>=7.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (25.0.1)
+Requirement already satisfied: requests<3,>=2.27 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (2.34.2)
+Requirement already satisfied: toml<2,>=0.10.1 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (0.10.2)
+Requirement already satisfied: typing-extensions<5,>=4.10.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (4.16.0)
+Requirement already satisfied: starlette<2,>=0.46.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (1.6.0)
+Requirement already satisfied: uvicorn<1,>=0.30.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (0.52.4)
+Requirement already satisfied: httptools<1,>=0.6.3 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (0.8.0)
+Requirement already satisfied: anyio<5,>=4.0.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (4.15.1)
+Requirement already satisfied: python-multipart<1,>=0.0.10 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (0.0.32)
+Requirement already satisfied: websockets<17,>=12.0.0 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (16.1.1)
+Requirement already satisfied: itsdangerous<3,>=2.1.2 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (2.2.0)
+Requirement already satisfied: watchdog<7,>=2.1.5 in C:\Python314\Lib\site-packages (from streamlit->-r requirements.txt (line 1)) (6.0.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in C:\Python314\Lib\site-packages (from pandas->-r requirements.txt (line 2)) (2.9.0.post0)
+Requirement already satisfied: tzdata in C:\Python314\Lib\site-packages (from pandas->-r requirements.txt (line 2)) (2026.3)
+Requirement already satisfied: jinja2 in C:\Python314\Lib\site-packages (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (3.1.6)
+Requirement already satisfied: jsonschema>=3.0 in C:\Python314\Lib\site-packages (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (4.26.0)
+Requirement already satisfied: narwhals>=2.4.0 in C:\Python314\Lib\site-packages (from altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (2.26.0)
+Requirement already satisfied: idna>=2.8 in C:\Python314\Lib\site-packages (from anyio<5,>=4.0.0->streamlit->-r requirements.txt (line 1)) (3.19)
+Requirement already satisfied: charset_normalizer<4,>=2 in C:\Python314\Lib\site-packages (from requests<3,>=2.27->streamlit->-r requirements.txt (line 1)) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in C:\Python314\Lib\site-packages (from requests<3,>=2.27->streamlit->-r requirements.txt (line 1)) (2.7.0)
+Requirement already satisfied: certifi>=2023.5.7 in C:\Python314\Lib\site-packages (from requests<3,>=2.27->streamlit->-r requirements.txt (line 1)) (2026.7.22)
+Requirement already satisfied: h11>=0.8 in C:\Python314\Lib\site-packages (from uvicorn<1,>=0.30.0->streamlit->-r requirements.txt (line 1)) (0.16.0)
+Requirement already satisfied: scipy>=1.10.0 in C:\Python314\Lib\site-packages (from scikit-learn->-r requirements.txt (line 4)) (1.18.1)
+Requirement already satisfied: joblib>=1.4.0 in C:\Python314\Lib\site-packages (from scikit-learn->-r requirements.txt (line 4)) (1.6.0)
+Requirement already satisfied: threadpoolctl>=3.5.0 in C:\Python314\Lib\site-packages (from scikit-learn->-r requirements.txt (line 4)) (3.6.0)
+Requirement already satisfied: contourpy>=1.0.1 in C:\Python314\Lib\site-packages (from matplotlib->-r requirements.txt (line 5)) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in C:\Python314\Lib\site-packages (from matplotlib->-r requirements.txt (line 5)) (0.12.1)
+Requirement already satisfied: fonttools>=4.28.2 in C:\Python314\Lib\site-packages (from matplotlib->-r requirements.txt (line 5)) (4.64.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in C:\Python314\Lib\site-packages (from matplotlib->-r requirements.txt (line 5)) (1.5.1)
+Requirement already satisfied: pyparsing>=3 in C:\Python314\Lib\site-packages (from matplotlib->-r requirements.txt (line 5)) (3.3.2)
+Requirement already satisfied: MarkupSafe>=2.0 in C:\Python314\Lib\site-packages (from jinja2->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (3.0.3)
+Requirement already satisfied: cloudpickle>=3.0 in C:\Python314\Lib\site-packages (from joblib>=1.4.0->scikit-learn->-r requirements.txt (line 4)) (3.1.2)
+Requirement already satisfied: attrs>=22.2.0 in C:\Python314\Lib\site-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (26.1.0)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in C:\Python314\Lib\site-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (2025.9.1)
+Requirement already satisfied: referencing>=0.28.4 in C:\Python314\Lib\site-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (0.37.0)
+Requirement already satisfied: rpds-py>=0.25.0 in C:\Python314\Lib\site-packages (from jsonschema>=3.0->altair!=5.4.0,!=5.4.1,<7,>=5.0.0->streamlit->-r requirements.txt (line 1)) (2026.6.3)
+Requirement already satisfied: six>=1.5 in C:\Python314\Lib\site-packages (from python-dateutil>=2.8.2->pandas->-r requirements.txt (line 2)) (1.17.0)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Test)
+[Pipeline] bat
 
-        stage('Deploy') {
-            steps {
-                bat '''
-                if not exist C:\\xampp\\htdocs\\ml_model mkdir C:\\xampp\\htdocs\\ml_model
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>C:\Python314\python.exe -m py_compile main.py 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy)
+[Pipeline] bat
 
-                xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model
-                '''
-            }
-        }
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>if not exist C:\xampp\htdocs\ml_model mkdir C:\xampp\htdocs\ml_model 
 
-        stage('Stop Old Streamlit') {
-            steps {
-                bat '''
-                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8501 ^| findstr LISTENING') do taskkill /PID %%a /F >nul 2>&1
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>xcopy /E /Y /I * C:\xampp\htdocs\ml_model 
+C:jenkinsfile
+C:main.py
+C:README.md
+C:requirements.txt
+C:__pycache__\main.cpython-314.pyc
+5 File(s) copied
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Stop Old Streamlit)
+[Pipeline] bat
 
-                exit /b 0
-                '''
-            }
-        }
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>for /F "tokens=5" %a in ('netstat -ano | findstr :8501 | findstr LISTENING') do taskkill /PID %a /F  1>nul 2>&1 
 
-        stage('Start Streamlit') {
-            steps {
-                bat '''
-                if exist C:\\xampp\\htdocs\\ml_model\\streamlit.log del C:\\xampp\\htdocs\\ml_model\\streamlit.log
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>exit /b 0 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Start Streamlit)
+[Pipeline] bat
 
-                start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>if exist C:\xampp\htdocs\ml_model\streamlit.log del C:\xampp\htdocs\ml_model\streamlit.log 
 
-                timeout /t 5 /nobreak >nul
-                '''
-            }
-        }
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>start "ML Model Analysis" /MIN cmd /c "C:\Python314\python.exe -m streamlit run C:\xampp\htdocs\ml_model\main.py --server.headless true --server.address 0.0.0.0 > C:\xampp\htdocs\ml_model\streamlit.log 2>&1" 
 
-        stage('Verify Application') {
-            steps {
-                bat '''
-                powershell -NoProfile -Command "try { Invoke-WebRequest -Uri http://localhost:8501 -UseBasicParsing -TimeoutSec 10 | Out-Null; Write-Host 'Streamlit application is running successfully.' } catch { Write-Error 'Streamlit application failed to start.'; exit 1 }"
-                '''
-            }
-        }
-    }
-}
+C:\ProgramData\Jenkins\.jenkins\workspace\ml-model>timeout /t 5 /nobreak  1>nul 
+ERROR: Input redirection is not supported, exiting the process immediately.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Verify Application)
+Stage "Verify Application" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
