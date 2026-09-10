@@ -43,12 +43,13 @@ pipeline {
             }
         }
 
-        stage('Start Streamlit') {
+       stage('Start Streamlit') {
     steps {
         bat '''
-        if exist C:\\xampp\\htdocs\\ml_model\\streamlit.log del C:\\xampp\\htdocs\\ml_model\\streamlit.log
+        if exist C:\\xampp\\htdocs\\ml_model\\streamlit-out.log del C:\\xampp\\htdocs\\ml_model\\streamlit-out.log
+        if exist C:\\xampp\\htdocs\\ml_model\\streamlit-error.log del C:\\xampp\\htdocs\\ml_model\\streamlit-error.log
 
-        powershell -NoProfile -Command "Start-Process -FilePath 'C:\\Python314\\python.exe' -ArgumentList '-m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 --server.port 8501' -WorkingDirectory 'C:\\xampp\\htdocs\\ml_model' -WindowStyle Hidden -RedirectStandardOutput 'C:\\xampp\\htdocs\\ml_model\\streamlit.log' -RedirectStandardError 'C:\\xampp\\htdocs\\ml_model\\streamlit.log'"
+        powershell -NoProfile -Command "Start-Process -FilePath 'C:\\Python314\\python.exe' -ArgumentList '-m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 --server.port 8501' -WorkingDirectory 'C:\\xampp\\htdocs\\ml_model' -WindowStyle Hidden -RedirectStandardOutput 'C:\\xampp\\htdocs\\ml_model\\streamlit-out.log' -RedirectStandardError 'C:\\xampp\\htdocs\\ml_model\\streamlit-error.log'"
 
         exit /b 0
         '''
