@@ -31,5 +31,12 @@ pipeline {
                 bat 'xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model'
             }
         }
+stage('Start Streamlit') {
+    steps {
+        bat '''
+        start "ML Model Analysis" /B C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true
+        '''
+    }
+}
     }
 }
