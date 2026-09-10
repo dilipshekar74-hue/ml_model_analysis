@@ -31,12 +31,33 @@ pipeline {
                 bat 'xcopy /E /Y /I * C:\\xampp\\htdocs\\ml_model'
             }
         }
-stage('Start Streamlit') {
-    steps {
-        bat '''
-        start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
-        '''
-    }
-}
+
+        stage('Stop Old Streamlit') {
+            steps {
+                bat '''
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8501 ^| findstr LISTENING') do taskkill /PID %%a /F
+                '''
+            }
+        }
+
+        stage('Start Streamlit') {
+            steps {
+                bat '''
+                if exist C:\\xampp\\htdocs\\ml_model\\streamlit.log del C:\\xampp\\htdocs\\ml_model\\streamlit.log
+
+                start "ML Model Analysis" /MIN cmd /c "C:\\Python314\\python.exe -m streamlit run C:\\xampp\\htdocs\\ml_model\\main.py --server.headless true --server.address 0.0.0.0 > C:\\xampp\\htdocs\\ml_model\\streamlit.log 2>&1"
+
+                timeout /t 5 /nobreak >nul
+                '''
+            }
+        }
+
+        stage('Verify Application') {
+            steps {
+                bat '''
+                powershell -NoProfile -Command "try { Invoke-WebRequest -Uri http://localhost:8501 -UseBasicParsing -TimeoutSec 10 | Out-Null; Write-Host 'Streamlit application is running successfully.' } catch { Write-Error 'Streamlit application failed to start.'; exit 1 }"
+                '''
+            }
+        }
     }
 }
